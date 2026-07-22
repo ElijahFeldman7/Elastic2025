@@ -33,6 +33,36 @@
 		<link rel="stylesheet" href="/styles/styles.css">
 		<roundcube:link rel="stylesheet" href="/styles/print.css" condition="env:action == 'print'" />
 	<roundcube:endif />
+	<link rel="stylesheet" href="/styles/gmail.css">
+	<script>
+	/* Elastic2025 Gmail layer: apply saved theme before first paint (no flash) */
+	try {
+		var h = document.documentElement;
+		if (!h.classList.contains('iframe')) {
+			var d = { wallpaper: 'none', wallpaperData: '', tint: 12, accent: '#0b57d0', singlePane: true, compact: false };
+			var p = {};
+			try { p = JSON.parse(localStorage.getItem('elastic2025.gmail')) || {}; } catch (e) {}
+			for (var k in d) if (!(k in p)) p[k] = d[k];
+			var wp = 'none';
+			if (p.wallpaper === 'custom' && p.wallpaperData) wp = 'url("' + p.wallpaperData + '")';
+			else if (p.wallpaper && p.wallpaper !== 'none') {
+				var g = { ocean: 'linear-gradient(160deg,#2b5876,#4e4376)', sky: 'linear-gradient(160deg,#89f7fe,#66a6ff)', sunset: 'linear-gradient(160deg,#ff9a9e,#fad0c4 60%,#fbc2eb)', forest: 'linear-gradient(160deg,#134e5e,#71b280)', graphite: 'linear-gradient(160deg,#232526,#414345)' };
+				wp = g[p.wallpaper] || 'none';
+			}
+			if (wp !== 'none') { h.style.setProperty('--wallpaper', wp); h.setAttribute('data-wallpaper', 'on'); }
+			else { h.setAttribute('data-wallpaper', 'off'); }
+			h.style.setProperty('--wallpaper-tint', 'rgba(0,0,0,' + (Math.max(0, Math.min(60, p.tint)) / 100) + ')');
+			if (p.accent) {
+				var c = p.accent.replace('#', ''), lum = (0.299 * parseInt(c.substr(0,2),16) + 0.587 * parseInt(c.substr(2,2),16) + 0.114 * parseInt(c.substr(4,2),16)) / 255;
+				h.style.setProperty('--accent', p.accent);
+				h.style.setProperty('--accent-contrast', lum > 0.6 ? '#111' : '#fff');
+				h.style.setProperty('--accent-soft', p.accent + '2b');
+			}
+			h.classList.toggle('pref-single-pane', !!p.singlePane);
+			h.classList.toggle('gm-compact', !!p.compact);
+		}
+	} catch (e) {}
+	</script>
 	<roundcube:if condition="env:action != 'print' && !config:devel_mode && config:dark_mode_support" />
 		<script>
 		try {

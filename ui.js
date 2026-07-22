@@ -2129,6 +2129,13 @@ if(rcmail.env.action=="preview")
     {
         var show;
 
+        if (document.documentElement.classList.contains('pref-single-pane')) {
+            screen_resize_small_all();
+            app_menu(true);
+            screen_resize_small_none();
+            return;
+        }
+
         if (layout.list.length) {
             show = layout.list.is(env.last_selected) || (!layout.sidebar.is(env.last_selected) && !layout.sidebar.is('.layout-sticky'));
             layout.list[show ? 'removeClass' : 'addClass']('hidden');
@@ -2147,6 +2154,13 @@ if(rcmail.env.action=="preview")
 
     function screen_resize_large()
     {
+        if (document.documentElement.classList.contains('pref-single-pane')) {
+            screen_resize_small_all();
+            app_menu(true);
+            screen_resize_small_none();
+            return;
+        }
+
         $.each(layout, function(name, item) { item.removeClass('hidden'); });
 
         screen_resize_small_none();
@@ -2250,7 +2264,7 @@ if(rcmail.env.action=="preview")
             layout.sidebar.addClass('hidden').removeClass('layout-sticky');
             layout.list.removeClass('hidden');
 
-            if (mode == 'small' || mode == 'phone') {
+            if (mode == 'small' || mode == 'phone' || document.documentElement.classList.contains('pref-single-pane')) {
                 hide_content();
             }
 

@@ -1,0 +1,454 @@
+html {
+    --accent: #0b57d0;              
+    --accent-soft: #d3e3fd;
+    --accent-contrast: #ffffff;
+    --page-bg: #f6f8fc;            
+    --surface: #ffffff;            /* the card interior */
+    --surface-muted: #f2f5fb;      /* read rows / subtle fills */
+    --card-radius: 16px;
+    --topbar-h: 64px;
+    --card-shadow: 0 1px 2px rgba(60, 64, 67, .15), 0 1px 3px rgba(60, 64, 67, .1);
+    --wallpaper: none;
+    --wallpaper-tint: rgba(255, 255, 255, 0);
+    --gm-font: "Google Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+html.dark-mode {
+    --accent: #a8c7fa;
+    --accent-soft: #223354;
+    --accent-contrast: #062e6f;
+    --page-bg: #0b0b0b;
+    --surface: #1b1b1b;
+    --surface-muted: #232323;
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 1px 3px rgba(0, 0, 0, .4);
+    --wallpaper-tint: rgba(0, 0, 0, 0);
+}
+
+body {
+    font-family: var(--gm-font);
+    background-color: var(--page-bg);
+}
+
+/* Photographic wallpaper (set by the panel). A tint overlay keeps text legible. */
+html[data-wallpaper="on"] body {
+    background-image:
+        linear-gradient(var(--wallpaper-tint), var(--wallpaper-tint)),
+        var(--wallpaper);
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* Never allow the page itself to scroll sideways — root cause of the
+   small-screen misalignment. Panes get their own scrollers. */
+html, body { overflow-x: hidden; }
+#layout { max-width: 100%; }
+
+/* ==========================================================================
+   Top app bar
+   ========================================================================== */
+#gm-topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    z-index: 1030;
+    background: transparent;
+    color: var(--font);
+}
+/* Give the app content room for the fixed bar. */
+body.task-mail #layout,
+body.task-settings #layout,
+body.task-addressbook #layout {
+    padding-top: var(--topbar-h);
+    box-sizing: border-box;
+}
+
+#gm-topbar .gm-logo {
+    height: 34px;
+    width: auto;
+    flex: 0 0 auto;
+}
+#gm-topbar .gm-hamburger {
+    display: none;            /* shown on small screens */
+    flex: 0 0 auto;
+    width: 44px; height: 44px;
+    border: 0; background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--font);
+    font-size: 22px;
+    align-items: center; justify-content: center;
+}
+#gm-topbar .gm-hamburger:hover { background: rgba(128, 128, 128, .18); }
+
+/* The search pill lives in the centre. gmail-ui.js relocates RoundCube's real
+   search form (.searchbar) into this slot on the mail screen. */
+#gm-topbar .gm-search-slot {
+    flex: 1 1 auto;
+    min-width: 0;               /* allow shrink so actions never get pushed off-screen */
+    max-width: 720px;
+    margin: 0 auto;
+}
+#gm-topbar .gm-search-slot .searchbar {
+    width: 100%;
+    min-width: 0;
+    background: var(--surface-muted);
+    border-radius: 999px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px 0 12px;
+    border: 1px solid transparent;
+    transition: background .15s, box-shadow .15s;
+}
+#gm-topbar .gm-search-slot .searchbar:focus-within {
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(60, 64, 67, .3);
+    border-color: transparent;
+}
+#gm-topbar .gm-search-slot .searchbar input {
+    background: transparent;
+    border: 0;
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    font-size: .98rem;
+    color: var(--font);
+}
+#gm-topbar .gm-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+#gm-topbar .gm-iconbtn {
+    width: 44px; height: 44px;
+    border: 0; background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--font);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    text-decoration: none;
+}
+#gm-topbar .gm-iconbtn:hover { background: rgba(128, 128, 128, .18); }
+#gm-topbar .gm-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+/* ==========================================================================
+   Floating-card layout
+   ========================================================================== */
+#layout {
+    background: transparent;
+    gap: 0;
+}
+#layout-list,
+#layout-content {
+    background: var(--surface) !important;
+    border-radius: var(--card-radius);
+    margin: 8px 8px 8px 0;
+    box-shadow: var(--card-shadow);
+    border: 0 !important;
+    overflow: hidden;
+}
+#layout-list { min-width: 0; }        /* fixes overflow-driven misalignment */
+#layout-sidebar {
+    background: transparent;
+    max-width: none;
+    min-width: 0;
+    border: 0 !important;
+}
+
+/* ---- Single-pane (non-split) reading ------------------------------------
+   When enabled, the list fills the width and the reading pane sits on top of
+   it, shown only when a message is open (RoundCube toggles .hidden). */
+html.pref-single-pane #layout-list { flex: 1 1 auto; }
+html.pref-single-pane #layout-content {
+    flex: 1 1 auto;
+    margin-left: 8px;
+}
+/* Classic split view keeps a comfortable list/preview ratio. */
+html:not(.pref-single-pane) #layout-list { flex: 2 1 0; }
+html:not(.pref-single-pane) #layout-content { flex: 3 1 0; }
+
+/* ==========================================================================
+   Sidebar — compose pill + folder pills
+   ========================================================================== */
+#layout-sidebar .header .compose.button,
+#layout-sidebar a.compose.button {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-radius: 999px;
+    box-shadow: var(--card-shadow);
+    padding: 0 22px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    text-transform: none;
+}
+#layout-sidebar .header .compose.button:hover { filter: brightness(1.05); }
+
+.folderlist li a,
+#folderlist-content .treelist li a {
+    border-radius: 0 999px 999px 0;
+    margin-right: 8px;
+    padding-left: 20px;
+}
+.folderlist li.selected > a,
+#folderlist-content .treelist li.selected > a {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+}
+.folderlist li a:hover { background: rgba(128, 128, 128, .12); }
+
+.powered-by { opacity: .5; font-size: .72rem; }
+
+/* ==========================================================================
+   Message list — Gmail row rhythm
+   ========================================================================== */
+#messagelist-header {
+    background: transparent;
+    border: 0;
+}
+/* When the search form is hoisted into the top bar, hide the empty inline one. */
+body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none; }
+
+.messagelist { border-collapse: separate; }
+.messagelist tr {
+    transition: box-shadow .12s, background .12s;
+    border-bottom: 1px solid var(--bordercolor);
+}
+.messagelist tr:hover {
+    box-shadow: inset 1px 0 0 var(--bordercolor), inset -1px 0 0 var(--bordercolor),
+                0 1px 2px rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+    z-index: 1;
+    position: relative;
+}
+.messagelist tr:not(.unread) { background: transparent; }
+.messagelist tr:not(.unread) td.subject span.subject { color: var(--font2); }
+
+.messagelist td.subject {
+    flex-wrap: nowrap;
+    align-items: baseline;
+    padding: .6rem 0;
+    gap: 4px;
+}
+.messagelist td.subject span.fromto {
+    width: 176px;
+    min-width: 176px;
+    flex: 0 0 176px;
+    color: var(--font);
+    font-weight: 400;
+}
+.messagelist tr.unread td.subject span.fromto {
+    color: var(--font);
+    font-weight: 700;
+}
+.messagelist td.subject span.subject {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    color: var(--font);
+}
+.messagelist tr.unread td.subject span.subject { font-weight: 700; }
+.messagelist td.subject span.subject span {
+    color: var(--font2);
+    font-weight: 400;
+}
+.messagelist td.subject span.date {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-left: 10px;
+    color: var(--font2);
+    font-size: .82rem;
+}
+.messagelist tr.unread td.subject span.date { color: var(--font); font-weight: 700; }
+
+/* Row density */
+html.gm-compact .messagelist td.subject { padding: .3rem 0; }
+html.gm-compact .messagelist td.subject span.date { line-height: 20px; }
+
+/* ==========================================================================
+   Reading pane / message view
+   ========================================================================== */
+#layout-content .header_back {
+    background: transparent;
+    border-bottom: 1px solid var(--bordercolor);
+}
+.message-part, #messagebody { font-family: var(--gm-font); }
+#layout-content .iframe-wrapper { background: var(--surface); }
+
+/* ==========================================================================
+   Login screen — Gmail sign-in card
+   ========================================================================== */
+body.task-login #layout,
+body.task-login #layout-content {
+    background: transparent !important;
+    box-shadow: none;
+    padding-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+body.task-login #login-form,
+body.task-login #layout-content.no-navbar {
+    background: var(--surface) !important;
+    border-radius: 28px;
+    box-shadow: var(--card-shadow);
+    padding: 40px 40px 28px;
+    max-width: 420px;
+    width: 100%;
+    margin: auto;
+}
+body.task-login #logo { max-height: 40px; margin-bottom: 18px; }
+
+/* ==========================================================================
+   Generic cards for settings / contacts / compose / dialogs
+   ========================================================================== */
+body.task-settings #layout > div,
+body.task-addressbook #layout > div {
+    background: var(--surface);
+    border-radius: var(--card-radius);
+    margin: 8px 8px 8px 0;
+    box-shadow: var(--card-shadow);
+    border: 0;
+}
+/* Fix icon-font glitches noted for Settings & Compose: ensure the icon font
+   is used and inherited on skin icon glyphs. */
+.sebicon, .listing .selection, .menu a.icon:before, .toolbar a.button:before {
+    font-family: "Icons", "Font Awesome 5 Free", var(--gm-font);
+}
+
+/* ==========================================================================
+   Customization panel (built by gmail-ui.js)
+   ========================================================================== */
+#gm-panel {
+    position: fixed;
+    top: calc(var(--topbar-h) - 6px);
+    right: 12px;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    background: var(--surface);
+    color: var(--font);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+    z-index: 1050;
+    padding: 16px;
+    display: none;
+    max-height: calc(100vh - var(--topbar-h) - 20px);
+    overflow: auto;
+}
+#gm-panel.open { display: block; }
+#gm-panel h4 { margin: 0 0 12px; font-size: 1rem; font-weight: 600; }
+#gm-panel .gm-section { margin-bottom: 16px; }
+#gm-panel .gm-section > label { display: block; font-size: .8rem; opacity: .7; margin-bottom: 6px; }
+#gm-panel .gm-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+#gm-panel .gm-swatch {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background-size: cover;
+    background-position: center;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff;
+    overflow: hidden;
+}
+#gm-panel .gm-swatch.selected { border-color: var(--accent); outline: 2px solid var(--accent); }
+#gm-panel .gm-accent {
+    width: 28px; height: 28px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+}
+#gm-panel .gm-accent.selected { border-color: var(--font); }
+#gm-panel .gm-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+#gm-panel input[type="range"] { width: 100%; }
+#gm-panel .gm-btn {
+    border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    font-weight: 600; font-size: .85rem;
+    background: var(--accent); color: var(--accent-contrast);
+}
+#gm-panel .gm-btn.secondary { background: var(--surface-muted); color: var(--font); }
+#gm-panel .gm-hint { font-size: .72rem; opacity: .6; margin-top: 6px; }
+#gm-panel .gm-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* Segmented control for pane / density */
+#gm-panel .gm-seg { display: flex; background: var(--surface-muted); border-radius: 999px; padding: 3px; }
+#gm-panel .gm-seg button {
+    flex: 1; border: 0; background: transparent; padding: 7px 10px;
+    border-radius: 999px; cursor: pointer; font-size: .82rem; color: var(--font);
+}
+#gm-panel .gm-seg button.active { background: var(--surface); box-shadow: var(--card-shadow); font-weight: 600; }
+
+/* ==========================================================================
+   Responsive / alignment
+   ========================================================================== */
+
+/* Off-canvas drawer sidebar on narrow screens */
+@media screen and (max-width: 768px) {
+    #gm-topbar .gm-hamburger { display: flex; }
+    #gm-topbar .gm-search-slot { max-width: none; }
+
+    #layout-sidebar {
+        position: fixed;
+        top: var(--topbar-h);
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        max-width: 85vw;
+        background: var(--surface);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        z-index: 1040;
+    }
+    body.gm-drawer-open #layout-sidebar { transform: translateX(0); }
+    body.gm-drawer-open::after {
+        content: "";
+        position: fixed; inset: var(--topbar-h) 0 0 0;
+        background: rgba(0, 0, 0, .4);
+        z-index: 1035;
+    }
+
+    #layout-list, #layout-content {
+        margin: 4px;
+        border-radius: 12px;
+    }
+    /* Full-width list; message opens over it */
+    #layout-content {
+        position: fixed;
+        inset: var(--topbar-h) 0 0 0;
+        margin: 4px;
+        z-index: 1020;
+    }
+    .messagelist td.subject span.fromto {
+        width: 130px; min-width: 130px; flex-basis: 130px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #gm-topbar { padding: 0 8px; gap: 4px; }
+    #gm-topbar .gm-logo { height: 28px; }
+    #gm-topbar .gm-search-slot .searchbar { height: 42px; }
+    .messagelist td.subject { flex-wrap: wrap; }
+    .messagelist td.subject span.fromto {
+        width: auto; min-width: 0; flex: 1 1 100%;
+    }
+    .messagelist td.subject span.date { font-size: .75rem; }
+    #layout-list, #layout-content { margin: 2px; border-radius: 10px; }
+    body.task-login #login-form { border-radius: 18px; padding: 24px; }
+}

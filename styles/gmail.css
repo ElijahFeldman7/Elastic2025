@@ -231,57 +231,110 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
 .messagelist { border-collapse: separate; }
 .messagelist tr {
     transition: box-shadow .12s, background .12s;
-    border-bottom: 1px solid var(--bordercolor);
+    border-bottom: 0;
 }
 .messagelist tr:hover {
-    box-shadow: inset 1px 0 0 var(--bordercolor), inset -1px 0 0 var(--bordercolor),
-                0 1px 2px rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+    background: rgba(128, 128, 128, .10);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, .25), 0 1px 3px 1px rgba(60, 64, 67, .12);
     z-index: 1;
     position: relative;
 }
+.messagelist tr.selected,
+.messagelist tr.selected:hover { background: var(--accent-soft); }
 .messagelist tr:not(.unread) { background: transparent; }
-.messagelist tr:not(.unread) td.subject span.subject { color: var(--font2); }
 
+/* --------------------------------------------------------------------------
+   The Gmail row.
+
+   Elastic emits the subject cell's children in DOM order:
+       flags → fromto → date → subject → attachment/size
+   which does NOT match Gmail's visual order. Rather than depend on that
+   source order (the cause of the overlapping columns), lay the cell out with
+   flexbox and pin each child with an explicit `order`, so the visual result
+   is always:  sender → subject/preview → attachment → date.
+   -------------------------------------------------------------------------- */
 .messagelist td.subject {
+    display: flex !important;
     flex-wrap: nowrap;
-    align-items: baseline;
-    padding: .6rem 0;
-    gap: 4px;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 12px 0 4px;
+    min-height: 40px;
+    gap: 8px;
+    line-height: 1.4;
 }
+
+.messagelist td.subject span.flags { order: 0; flex: 0 0 auto; }
+.messagelist td.subject span.msgicon { order: 0; flex: 0 0 auto; }
+
 .messagelist td.subject span.fromto {
-    width: 176px;
-    min-width: 176px;
-    flex: 0 0 176px;
+    order: 1;
+    flex: 0 0 168px;
+    width: 168px;
+    min-width: 168px;
+    max-width: 168px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 0;
     color: var(--font);
     font-weight: 400;
+    font-size: .875rem;
 }
-.messagelist tr.unread td.subject span.fromto {
-    color: var(--font);
-    font-weight: 700;
-}
+.messagelist tr.unread td.subject span.fromto { font-weight: 700; }
+
 .messagelist td.subject span.subject {
+    order: 2;
     flex: 1 1 auto;
     width: auto;
     min-width: 0;
-    color: var(--font);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 0;
+    color: var(--font2);
+    font-size: .875rem;
 }
-.messagelist tr.unread td.subject span.subject { font-weight: 700; }
-.messagelist td.subject span.subject span {
+.messagelist td.subject span.subject a { color: inherit; text-decoration: none; }
+.messagelist tr.unread td.subject span.subject { color: var(--font); font-weight: 700; }
+/* The message preview / fragment that follows the subject stays muted. */
+.messagelist td.subject span.subject span,
+.messagelist td.subject span.subject .fragment {
     color: var(--font2);
     font-weight: 400;
 }
-.messagelist td.subject span.date {
+
+/* Trailing items ride to the right edge because the subject's flex-grow fills
+   all remaining space — no auto-margins, so the subject box (and its ellipsis)
+   still expands to meet the date the way Gmail does. */
+.messagelist td.subject span.attachment {
+    order: 3;
     flex: 0 0 auto;
-    margin-left: auto;
-    padding-left: 10px;
+}
+
+.messagelist td.subject span.date {
+    order: 4;
+    flex: 0 0 auto;
+    padding-left: 8px;
+    white-space: nowrap;
     color: var(--font2);
-    font-size: .82rem;
+    font-size: .78rem;
+    line-height: normal;
 }
 .messagelist tr.unread td.subject span.date { color: var(--font); font-weight: 700; }
 
+/* Keep the size column (only shown when sorting by size) inline with the date. */
+.messagelist td.subject span.size {
+    order: 4;
+    flex: 0 0 auto;
+    padding-left: 8px;
+    color: var(--font2);
+    font-size: .78rem;
+}
+
 /* Row density */
-html.gm-compact .messagelist td.subject { padding: .3rem 0; }
-html.gm-compact .messagelist td.subject span.date { line-height: 20px; }
+html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padding-bottom: 0; }
 
 /* ==========================================================================
    Reading pane / message view
@@ -436,7 +489,7 @@ body.task-addressbook #layout > div {
         z-index: 1020;
     }
     .messagelist td.subject span.fromto {
-        width: 130px; min-width: 130px; flex-basis: 130px;
+        width: 130px; min-width: 130px; max-width: 130px; flex: 0 0 130px;
     }
 }
 
@@ -444,11 +497,13 @@ body.task-addressbook #layout > div {
     #gm-topbar { padding: 0 8px; gap: 4px; }
     #gm-topbar .gm-logo { height: 28px; }
     #gm-topbar .gm-search-slot .searchbar { height: 42px; }
-    .messagelist td.subject { flex-wrap: wrap; }
+    /* Two-line card on phones: [sender ........ date] over [subject]. */
+    .messagelist td.subject { flex-wrap: wrap; row-gap: 2px; }
     .messagelist td.subject span.fromto {
-        width: auto; min-width: 0; flex: 1 1 100%;
+        order: 1; width: auto; min-width: 0; max-width: none; flex: 1 1 auto;
     }
-    .messagelist td.subject span.date { font-size: .75rem; }
+    .messagelist td.subject span.date { order: 2; flex: 0 0 auto; font-size: .75rem; }
+    .messagelist td.subject span.subject { order: 3; flex: 1 1 100%; }
     #layout-list, #layout-content { margin: 2px; border-radius: 10px; }
     body.task-login #login-form { border-radius: 18px; padding: 24px; }
 }

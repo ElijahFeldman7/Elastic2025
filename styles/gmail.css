@@ -319,21 +319,23 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
    initial as a coloured square in td.selection (.sel_circle.maillogo_*); on
    select it flips to a checkbox. Round both so they read as Gmail avatars. */
 .messagelist td.selection { width: 46px; }
+/* Size/centre both states, but DON'T force display — Elastic toggles which one
+   is visible (avatar normally, checkbox when selected/hovered). Forcing display
+   made the select checkmark show on every row. */
 .messagelist td.selection .sel_circle.maillogo_no_select,
 .messagelist td.selection .sel_circle.maillogo_is_select {
     width: 30px;
     height: 30px;
-    border-radius: 50%;
     font-size: 13px;
-    /* Flex-centre so the initial AND the selected-state checkmark sit dead
-       centre (line-height alone left the checkmark off-centre). */
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+    line-height: 30px;
     text-align: center;
     background-position: center !important;
+    background-repeat: no-repeat;
 }
+/* Round avatar for the sender initial … */
+.messagelist td.selection .sel_circle.maillogo_no_select { border-radius: 50%; }
+/* … but a SQUARE checkbox for the multi-select state (Gmail-style). */
+.messagelist td.selection .sel_circle.maillogo_is_select { border-radius: 4px; }
 /* The trailing flag/attachment glyph column reads as a stray "file" icon —
    drop it (its actions live in the hover bar / message view). */
 .messagelist td.flags { display: none; }
@@ -569,17 +571,20 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
 
 /* Body */
 #message-content { padding: 12px 24px; }
-/* Keep the whole message body on the themed surface with themed text so a
-   plain-text message never renders as a stray white block in dark mode. */
-.message-part,
+/* Consistency: render every message body on a clean white "email card" (like
+   Gmail) instead of Elastic's mismatch (plain-text themed vs HTML #eee). White
+   is readable for both plain-text and HTML mail in either app theme. */
 #messagebody,
-#messagebody pre,
+.message-part,
 div.message-htmlpart,
-div.message-part {
+[id^="message-htmlpart"] {
+    background: #ffffff !important;
     font-family: var(--gm-font);
-    color: var(--gm-ink);
-    background: var(--surface);
 }
+/* Plain-text bodies get dark ink on the white card; HTML keeps its own colours. */
+.message-part,
+#messagebody pre,
+div.message-part { color: #202124; }
 #layout-content .iframe-wrapper { background: var(--surface); }
 
 /* --- Injected Gmail-style bottom action pills (gmail-ui.js) --- */

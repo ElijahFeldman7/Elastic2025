@@ -17,7 +17,9 @@ html {
     --gm-ink: #202124;         /* subject + sender name */
     --gm-meta: #5f6368;        /* email address, "to me", timestamp */
     --gm-hairline: #f1f3f4;    /* row + section dividers */
-    --gm-pill-border: #dadce0; /* outlined action pills */
+    --gm-pill-border: #dadce0; /* subject label chips */
+    --gm-btn-border: #747775;  /* Reply/Forward action pills (Gmail-exact) */
+    --gm-btn-text: #444746;
     --gm-hover: rgba(60, 64, 67, .08); /* circular icon hover */
 }
 html.dark-mode {
@@ -35,6 +37,8 @@ html.dark-mode {
     --gm-meta: #9aa0a6;
     --gm-hairline: #2a2a2a;
     --gm-pill-border: #5f6368;
+    --gm-btn-border: #5f6368;
+    --gm-btn-text: #c4c7c5;
     --gm-hover: rgba(255, 255, 255, .10);
 }
 
@@ -162,6 +166,16 @@ body.task-addressbook #layout {
     text-decoration: none;
     margin-left: 4px;
 }
+#gm-topbar .gm-avatar svg { width: 20px; height: 20px; fill: currentColor; }
+#gm-topbar .gm-theme { font-size: 18px; line-height: 1; }
+
+/* Full-screen message: Back bar (Elastic's .header_back) styled clean like
+   Gmail's message toolbar — borderless icons on a hairline-divided bar. */
+html.pref-single-pane body.gm-fullmsg #layout-content .header_back {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--gm-hairline);
+}
+#layout-content .header_back .button.icon.back { color: var(--gm-icon); }
 
 /* ==========================================================================
    Floating-card layout
@@ -190,11 +204,20 @@ body.task-addressbook #layout {
 /* ---- Single-pane (non-split) reading ------------------------------------
    When enabled, the list fills the width and the reading pane sits on top of
    it, shown only when a message is open (RoundCube toggles .hidden). */
-html.pref-single-pane #layout-list { flex: 1 1 auto; }
-html.pref-single-pane #layout-content {
-    flex: 1 1 auto;
-    margin-left: 8px;
+/* Gmail single-column flow (default): the list fills the width; opening a
+   message replaces it full-screen (gmail-ui.js toggles body.gm-fullmsg on the
+   preview frame's load event), and the message's Back arrow returns to the list.
+   No permanent side-by-side preview pane. */
+html.pref-single-pane body.task-mail #layout-list { flex: 1 1 100%; }
+html.pref-single-pane body.task-mail:not(.gm-fullmsg) #layout-content { display: none; }
+html.pref-single-pane body.task-mail.gm-fullmsg #layout-list { display: none; }
+html.pref-single-pane body.task-mail.gm-fullmsg #layout-content {
+    flex: 1 1 100%;
+    margin-left: 0;
 }
+/* The full-screen message needs its Back bar (Elastic hides it in widescreen). */
+html.pref-single-pane body.task-mail.gm-fullmsg #layout-content .header_back { display: block; }
+
 /* Classic split view keeps a comfortable list/preview ratio. */
 html:not(.pref-single-pane) #layout-list { flex: 2 1 0; }
 html:not(.pref-single-pane) #layout-content { flex: 3 1 0; }
@@ -216,8 +239,6 @@ html:not(.pref-single-pane) #layout-content { flex: 3 1 0; }
     text-transform: none;
 }
 #layout-sidebar .header .compose.button:hover { filter: brightness(1.05); }
-/* The compose link wraps its label in a <div> that inherits a grey pill from
-   base Elastic — flatten it so the button reads as one solid accent pill. */
 #layout-sidebar .compose.button > div,
 #layout-sidebar a.compose.button > div,
 #layout-sidebar .header .compose.button div {
@@ -250,14 +271,10 @@ html:not(.pref-single-pane) #layout-content { flex: 3 1 0; }
 
 .powered-by { opacity: .5; font-size: .72rem; }
 
-/* ==========================================================================
-   Message list — Gmail row rhythm
-   ========================================================================== */
 #messagelist-header {
     background: transparent;
     border: 0;
 }
-/* When the search form is hoisted into the top bar, hide the empty inline one. */
 body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none; }
 
 .messagelist { border-collapse: separate; }
@@ -501,23 +518,23 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
     gap: 12px;
     padding: 8px 24px 28px;
 }
+/* Exact Gmail spec (measured live): 36px tall, 14px/500, #444746 text,
+   1px #747775 border, 18px radius, icon left. */
 .gm-msg-actions button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid var(--gm-pill-border);
-    border-radius: 999px;
-    padding: 8px 20px;
+    height: 36px;
+    border: 1px solid var(--gm-btn-border);
+    border-radius: 18px;
+    padding: 0 16px 0 12px;
     background: transparent;
-    color: var(--gm-ink);
-    font: 600 .875rem var(--gm-font);
+    color: var(--gm-btn-text);
+    font: 500 14px var(--gm-font);
     cursor: pointer;
-    transition: background .12s, box-shadow .12s;
+    transition: background .12s;
 }
-.gm-msg-actions button:hover {
-    background: var(--surface-muted);
-    box-shadow: var(--card-shadow);
-}
+.gm-msg-actions button:hover { background: var(--gm-hover); }
 .gm-msg-actions button svg { width: 18px; height: 18px; fill: currentColor; }
 
 /* ==========================================================================

@@ -151,6 +151,7 @@
             '<button class="gm-hamburger" title="Menu" aria-label="Menu">☰</button>' +
             '<div class="gm-search-slot"></div>' +
             '<div class="gm-actions">' +
+                '<button class="gm-iconbtn gm-theme" title="Toggle light/dark" aria-label="Toggle light/dark"></button>' +
                 '<button class="gm-iconbtn gm-gear" title="Theme &amp; layout" aria-label="Theme settings">⚙</button>' +
                 '<a class="gm-avatar" href="./?_task=settings" title="Settings">' +
                     (initial || PERSON_SVG) + '</a>' +
@@ -182,6 +183,50 @@
             e.stopPropagation();
             togglePanel();
         });
+
+        // Light/dark toggle. Elastic reads a colorMode cookie (falling back to
+        // prefers-color-scheme), so persist there and flip the class live on
+        // both the page and the open message frame.
+        var themeBtn = bar.querySelector(".gm-theme");
+        function refreshThemeIcon() {
+            themeBtn.textContent = html.classList.contains("dark-mode") ? "☀" : "☾";
+        }
+        refreshThemeIcon();
+        themeBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var dark = !html.classList.contains("dark-mode");
+            document.cookie = "colorMode=" + (dark ? "dark" : "light") + ";path=/;max-age=31536000";
+            html.classList.toggle("dark-mode", dark);
+            var fr = document.getElementById("messagecontframe");
+            try {
+                if (fr && fr.contentDocument)
+                    fr.contentDocument.documentElement.classList.toggle("dark-mode", dark);
+            } catch (e2) {}
+            refreshThemeIcon();
+        });
+    }
+
+    /* Full-screen message (Gmail single-column): the preview frame is navigated
+       WITHOUT changing its src attribute, so detect an open message by the
+       presence of #message-content in the frame on each load, and toggle
+       body.gm-fullmsg (the CSS hides the list and expands the message). The
+       Back arrow clears it immediately. */
+    function initFullMessage() {
+        var frame = document.getElementById("messagecontframe");
+        if (!frame) return;
+        function isOpen() {
+            try { return !!(frame.contentDocument && frame.contentDocument.getElementById("message-content")); }
+            catch (e) { return false; }
+        }
+        function setOpen(open) { document.body.classList.toggle("gm-fullmsg", !!open); }
+        frame.addEventListener("load", function () { setOpen(isOpen()); });
+        document.addEventListener("click", function (e) {
+            if (e.target.closest &&
+                e.target.closest("#layout-content .header_back_back, #layout-content .button.icon.back")) {
+                setOpen(false);
+            }
+        });
+        setOpen(isOpen());
     }
 
     var panel;
@@ -358,8 +403,9 @@
     }
 
     function boot() {
-        apply(load());        
+        apply(load());
         buildTopbar();
+        initFullMessage();
     }
 
     if (document.readyState === "loading") {

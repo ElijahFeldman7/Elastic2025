@@ -290,6 +290,22 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
 .messagelist td.subject span.flags { order: 0; flex: 0 0 auto; }
 .messagelist td.subject span.msgicon { order: 0; flex: 0 0 auto; }
 
+/* Sender avatar tiles → round Gmail-style circles (whatever element carries
+   them — Elastic uses .contactphoto; cover img fallbacks too). */
+.messagelist td.subject .contactphoto,
+.messagelist td.subject .contactphoto img,
+.messagelist .contactphoto,
+.messagelist td.subject > span > img {
+    order: 0;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
 .messagelist td.subject span.fromto {
     order: 1;
     flex: 0 0 168px;
@@ -333,17 +349,24 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
 .messagelist td.subject span.attachment {
     order: 3;
     flex: 0 0 auto;
+    margin-left: 4px;
 }
 
 .messagelist td.subject span.date {
     order: 4;
     flex: 0 0 auto;
-    padding-left: 8px;
+    margin-left: 8px;
+    padding-left: 0;
+    min-width: 56px;
+    text-align: right;
     white-space: nowrap;
     color: var(--font2);
     font-size: .78rem;
     line-height: normal;
 }
+/* Keep the whole row inside the pane so the date never gets clipped. */
+#messagelist-content { padding-right: 4px; }
+.messagelist td.subject { padding-right: 16px; }
 .messagelist tr.unread td.subject span.date { color: var(--font); font-weight: 700; }
 
 /* Keep the size column (only shown when sorting by size) inline with the date. */

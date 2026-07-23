@@ -290,14 +290,21 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
 .messagelist td.subject span.flags { order: 0; flex: 0 0 auto; }
 .messagelist td.subject span.msgicon { order: 0; flex: 0 0 auto; }
 
-/* Sender avatar tiles → round Gmail-style circles (whatever element carries
-   them — Elastic uses .contactphoto; cover img fallbacks too). */
+/* Sender avatar tiles → round Gmail-style circles. Elastic renders the sender
+   initial as a coloured square in td.selection (.sel_circle.maillogo_*); on
+   select it flips to a checkbox. Round both so they read as Gmail avatars. */
+.messagelist td.selection { width: 46px; }
+.messagelist td.selection .sel_circle.maillogo_no_select,
+.messagelist td.selection .sel_circle.maillogo_is_select {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 13px;
+    line-height: 30px;
+    text-align: center;
+}
 .messagelist td.subject .contactphoto,
-.messagelist td.subject .contactphoto img,
-.messagelist .contactphoto,
-.messagelist td.subject > span > img {
-    order: 0;
-    flex: 0 0 auto;
+.messagelist td.subject .contactphoto img {
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -352,21 +359,30 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
     margin-left: 4px;
 }
 
+/* Elastic renders span.size as an absolutely-positioned overlay that also
+   carries hover action-icons (.insummary) — it lands on top of the date.
+   Drop it; Gmail doesn't show size in the list anyway. */
+.messagelist td.subject span.size,
+.messagelist td.subject .insummary { display: none !important; }
+
 .messagelist td.subject span.date {
-    order: 4;
+    order: 5;
     flex: 0 0 auto;
-    margin-left: 8px;
+    margin-left: 10px;
     padding-left: 0;
-    min-width: 56px;
+    min-width: 96px;
+    width: auto;
     text-align: right;
     white-space: nowrap;
     color: var(--font2);
     font-size: .78rem;
     line-height: normal;
 }
-/* Keep the whole row inside the pane so the date never gets clipped. */
+/* Keep the row inside the pane and give the flag star breathing room so the
+   date is never clipped or overlapped. */
 #messagelist-content { padding-right: 4px; }
-.messagelist td.subject { padding-right: 16px; }
+.messagelist td.subject { padding-right: 10px; }
+.messagelist td.flags { padding-left: 2px; width: 20px; }
 .messagelist tr.unread td.subject span.date { color: var(--font); font-weight: 700; }
 
 /* Keep the size column (only shown when sorting by size) inline with the date. */
@@ -440,13 +456,27 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
     vertical-align: middle;
 }
 
-/* Avatar → circle (shape only) */
+/* Sender row: Elastic's .header is already flex, with the avatar as the LAST
+   child (so it floats right). Reorder it to the left and round it — Gmail-style
+   avatar → sender. The avatar is a .replacecontactpic letter tile or a photo. */
+#message-header .header { display: flex; align-items: flex-start; gap: 14px; }
+#message-header .header .header-content { order: 0; flex: 1 1 auto; min-width: 0; }
 #message-header .contactphoto,
-#message-header .contactphoto img {
+#message-header .contactphoto img,
+#message-header .header .replacecontactpic,
+#message-header .header .sel_circle.maillogo_no_select {
+    order: -1;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
     border-radius: 50%;
     object-fit: cover;
     overflow: hidden;
-    background: var(--surface-muted);
+    line-height: 40px;
+    text-align: center;
+    font-size: 16px;
+    background-clip: padding-box;
 }
 /* Sender name bold, address/headers muted (colour/weight only) */
 #message-header .header-summary { font-weight: 700; color: var(--gm-ink); }

@@ -654,19 +654,35 @@ body.task-addressbook #layout > div {
     font-family: "Icons", "Font Awesome 5 Free", var(--gm-font);
 }
 
-/* Compose: Elastic leaves the content/form surfaces a hard-coded light grey
-   (#eee), which reads as a white block on a dark/wallpaper theme. Theme them. */
+/* Compose is always a light card (like Gmail's compose window) — readable in
+   both app themes, and matching the white email the recipient will see. In
+   dark mode Elastic left dark text on dark surfaces (invisible); force a
+   consistent white surface + dark ink across the whole form and its inputs. */
+body.task-mail.action-compose #layout-content,
 #compose-content,
 #compose-content .formcontainer,
 #compose-options,
-#compose-attachments {
-    background: var(--surface) !important;
-    color: var(--gm-ink);
+#compose-attachments,
+.compose-headers,
+.compose-headers td,
+#composebody,
+#composebodycontainer {
+    background: #ffffff !important;
+    color: #202124 !important;
 }
-body.task-mail.action-compose #layout,
-body.task-mail.action-compose #layout-content {
-    background: var(--page-bg);
+#compose-content input,
+#compose-content textarea,
+#compose-content select,
+#compose-content .form-control,
+.compose-headers input,
+.compose-headers textarea,
+.compose-headers .form-control {
+    background: #ffffff !important;
+    color: #202124 !important;
+    border-color: #dadce0 !important;
 }
+#compose-content input::placeholder,
+.compose-headers input::placeholder { color: #80868b !important; }
 
 /* ==========================================================================
    Customization panel (built by gmail-ui.js)

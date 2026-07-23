@@ -216,6 +216,23 @@ html:not(.pref-single-pane) #layout-content { flex: 3 1 0; }
     text-transform: none;
 }
 #layout-sidebar .header .compose.button:hover { filter: brightness(1.05); }
+/* The compose link wraps its label in a <div> that inherits a grey pill from
+   base Elastic — flatten it so the button reads as one solid accent pill. */
+#layout-sidebar .compose.button > div,
+#layout-sidebar a.compose.button > div,
+#layout-sidebar .header .compose.button div {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0;
+    margin: 0;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+}
 
 .folderlist li a,
 #folderlist-content .treelist li a {
@@ -344,55 +361,49 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
 /* ==========================================================================
    Reading pane / message view
    ========================================================================== */
-#layout-content {
+/* NOTE: this is a *gentle* restyle — recolour, reshape the avatar, and set
+   fonts, but do NOT reflow the header's flow (base Elastic positions its
+   children, and forcing flex here overlaps them in the framed preview). */
+
+/* Give the message chrome an explicit themed surface so the subject/sender
+   text always contrasts (avoids white-on-white fade when the preview frame's
+   colour mode and the body iframe disagree). */
+#layout-content,
+#message-header,
+#message-content {
     background: var(--surface);
+    color: var(--gm-ink);
 }
-#layout-content .header_back,
-#layout-content .header[role="toolbar"] {
+#layout-content .header_back {
     background: transparent;
     border-bottom: 1px solid var(--gm-hairline);
 }
 
-/* --- Top action toolbar (back / archive / spam / delete / more / pager) --- */
-#layout-content .header[role="toolbar"] a.button,
-#layout-content .header[role="toolbar"] a.button.icon,
+/* Action icons → Gmail grey with a soft round hover. Colour/hover only — no
+   box-model changes, so nothing overlaps. */
+#layout-content .header a.button,
 #mailtoolbar > a,
 #mailtoolbar .message_iconflag,
-#mailtoolbar a.button {
-    color: var(--gm-icon);
-    border: 0;
-    background: transparent;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .12s;
-}
-#layout-content .header[role="toolbar"] a.button:hover,
+#mailtoolbar a.button { color: var(--gm-icon); }
+#layout-content .header a.button:hover,
 #mailtoolbar > a:hover,
 #mailtoolbar a.button:hover {
     background: var(--gm-hover);
+    border-radius: 50%;
     color: var(--gm-ink);
 }
 
-/* --- Subject row --- */
-#message-header {
-    padding: 12px 24px 0;
-}
+/* Subject */
 #message-header .subject {
     font-family: var(--gm-font);
     font-size: 1.375rem;
     font-weight: 400;
     line-height: 1.4;
     color: var(--gm-ink);
-    margin: 4px 0 14px;
     word-break: break-word;
 }
-/* Roundcube label/flag chips beside the subject → Gmail label chips */
+/* Roundcube label/flag chips beside the subject → small Gmail label chips */
 #message-header .subject .label,
-#message-header .subject .msgflags span,
 #message-header .subject span.label {
     display: inline-flex;
     align-items: center;
@@ -406,74 +417,29 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
     vertical-align: middle;
 }
 
-/* --- Sender block: avatar + name/email + right-aligned date & icons --- */
-#message-header .header {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 0 0 12px;
-    border-bottom: 1px solid var(--gm-hairline);
-}
-#message-header .header .contactphoto,
-#message-header .header .contactphoto img {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
+/* Avatar → circle (shape only) */
+#message-header .contactphoto,
+#message-header .contactphoto img {
     border-radius: 50%;
     object-fit: cover;
     overflow: hidden;
     background: var(--surface-muted);
 }
-#message-header .header .header-content {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding-top: 1px;
-}
-/* Sender display name */
-#message-header .header-summary,
-#message-header .header-summary .adr,
-#message-header .header-summary .name {
-    font-size: .875rem;
-    font-weight: 700;
-    color: var(--gm-ink);
-}
-/* Email address + to/date lines are muted */
-#message-header .header-summary .email,
-#message-header .header-summary .subtitle,
+/* Sender name bold, address/headers muted (colour/weight only) */
+#message-header .header-summary { font-weight: 700; color: var(--gm-ink); }
 #message-header .header-headers,
 #message-header .header-headers a,
-#message-header .header-headers td {
-    font-weight: 400;
-    font-size: .8125rem;
-    color: var(--gm-meta);
-}
-#message-header .header-headers { margin-top: 2px; }
-
-/* Per-message toolbar (date + flag + reply + more) pinned right */
-#message-header .header #mailtoolbar {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex: 0 0 auto;
-}
-#message-header .header .messagedate {
+#message-header .header-headers td { color: var(--gm-meta); }
+#message-header .messagedate {
     color: var(--gm-meta);
     font-size: .8125rem;
     white-space: nowrap;
-    margin-right: 6px;
 }
 
-/* --- Body --- */
-#message-content {
-    padding: 16px 24px 8px;
-}
-.message-part, #messagebody, #message-content {
-    font-family: var(--gm-font);
-    color: var(--gm-ink);
-}
+/* Body */
+#message-content { padding: 12px 24px; }
+.message-part, #messagebody { font-family: var(--gm-font); color: var(--gm-ink); }
 #layout-content .iframe-wrapper { background: var(--surface); }
-#message-content .leftcol { margin-bottom: 8px; }
 
 /* --- Injected Gmail-style bottom action pills (gmail-ui.js) --- */
 .gm-msg-actions {

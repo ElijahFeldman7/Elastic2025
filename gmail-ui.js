@@ -130,23 +130,30 @@
         var bar = document.createElement("div");
         bar.id = "gm-topbar";
 
-        var logoSrc = "/images/logo.svg";
-        var existing = document.getElementById("logo");
-        if (existing && existing.getAttribute("src")) logoSrc = existing.getAttribute("src");
-
-        var initial = "@";
+        // Derive a real account initial; if unavailable, fall back to a clean
+        // person glyph instead of an ugly "@".
+        var initial = "";
         try {
-            var u = (window.rcmail && rcmail.env && rcmail.env.username) || "";
-            if (u) initial = u.trim().charAt(0).toUpperCase();
+            var u = (window.rcmail && rcmail.env &&
+                     (rcmail.env.username || rcmail.env.user || rcmail.env.email)) || "";
+            if (!u) {
+                var uEl = document.querySelector(".username, #rcmloginuser");
+                if (uEl) u = uEl.textContent || uEl.value || "";
+            }
+            u = (u || "").trim();
+            if (/^[a-z0-9]/i.test(u)) initial = u.charAt(0).toUpperCase();
         } catch (e) {}
+        var PERSON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" ' +
+            'aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 ' +
+            '2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
 
         bar.innerHTML =
             '<button class="gm-hamburger" title="Menu" aria-label="Menu">☰</button>' +
-            '<img class="gm-logo" src="' + logoSrc + '" alt="Logo">' +
             '<div class="gm-search-slot"></div>' +
             '<div class="gm-actions">' +
                 '<button class="gm-iconbtn gm-gear" title="Theme &amp; layout" aria-label="Theme settings">⚙</button>' +
-                '<a class="gm-avatar" href="./?_task=settings" title="Settings">' + initial + '</a>' +
+                '<a class="gm-avatar" href="./?_task=settings" title="Settings">' +
+                    (initial || PERSON_SVG) + '</a>' +
             '</div>';
 
         document.body.insertBefore(bar, document.body.firstChild);

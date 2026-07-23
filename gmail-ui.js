@@ -126,6 +126,10 @@
 
         var task = (document.body.className.match(/task-([a-z]+)/) || [])[1] || "";
         if (["mail", "settings", "addressbook"].indexOf(task) === -1) return;
+        // Don't build the app bar in standalone/compose windows (they open under
+        // task=mail but shouldn't carry the inbox chrome).
+        var action = (window.rcmail && rcmail.env && rcmail.env.action) || "";
+        if (["compose", "print", "get", "bounce"].indexOf(action) !== -1) return;
 
         var bar = document.createElement("div");
         bar.id = "gm-topbar";
@@ -220,12 +224,18 @@
         }
         function setOpen(open) { document.body.classList.toggle("gm-fullmsg", !!open); }
         frame.addEventListener("load", function () { setOpen(isOpen()); });
+        // Back arrow: intercept in the CAPTURE phase so Elastic's own handler
+        // (href="#sidebar" + UI.show_list, which hides the folder sidebar) never
+        // runs — we just return to the full-width list, sidebar intact.
         document.addEventListener("click", function (e) {
             if (e.target.closest &&
-                e.target.closest("#layout-content .header_back_back, #layout-content .button.icon.back")) {
+                e.target.closest("#layout-content .header_back_back, #layout-content .button.icon.back") &&
+                document.body.classList.contains("gm-fullmsg")) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
                 setOpen(false);
             }
-        });
+        }, true);
         setOpen(isOpen());
     }
 

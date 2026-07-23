@@ -208,11 +208,19 @@ html.pref-single-pane body.gm-fullmsg #layout-content .header_back {
    message replaces it full-screen (gmail-ui.js toggles body.gm-fullmsg on the
    preview frame's load event), and the message's Back arrow returns to the list.
    No permanent side-by-side preview pane. */
-html.pref-single-pane body.task-mail #layout-list { flex: 1 1 100%; }
+/* Override Elastic's split-pane caps (flex:0 0 auto / max-width:43% set for the
+   widescreen preview) so the single pane truly fills the width. */
+html.pref-single-pane body.task-mail #layout-list {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
+}
 html.pref-single-pane body.task-mail:not(.gm-fullmsg) #layout-content { display: none; }
 html.pref-single-pane body.task-mail.gm-fullmsg #layout-list { display: none; }
 html.pref-single-pane body.task-mail.gm-fullmsg #layout-content {
-    flex: 1 1 100%;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
     margin-left: 0;
 }
 /* The full-screen message needs its Back bar (Elastic hides it in widescreen). */
@@ -576,6 +584,20 @@ body.task-addressbook #layout > div {
    is used and inherited on skin icon glyphs. */
 .sebicon, .listing .selection, .menu a.icon:before, .toolbar a.button:before {
     font-family: "Icons", "Font Awesome 5 Free", var(--gm-font);
+}
+
+/* Compose: Elastic leaves the content/form surfaces a hard-coded light grey
+   (#eee), which reads as a white block on a dark/wallpaper theme. Theme them. */
+#compose-content,
+#compose-content .formcontainer,
+#compose-options,
+#compose-attachments {
+    background: var(--surface) !important;
+    color: var(--gm-ink);
+}
+body.task-mail.action-compose #layout,
+body.task-mail.action-compose #layout-content {
+    background: var(--page-bg);
 }
 
 /* ==========================================================================

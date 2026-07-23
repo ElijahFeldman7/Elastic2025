@@ -4,6 +4,47 @@
     var STORE_KEY = "elastic2025.gmail";
     var html = document.documentElement;
 
+    /* Gmail-style bottom action pills (Reply / Reply all / Forward).
+       Roundcube has no bottom action bar, so we inject one. This must run even
+       inside the framed message view — which carries the `.iframe` class — so
+       it happens before the early return below. */
+    (function initMessageActions() {
+        var ICON = {
+            reply:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>',
+            replyAll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V5l-7 7 7 7v-3l-4-4 4-4zm6 1V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>',
+            forward:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z"/></svg>'
+        };
+        var BTNS = [
+            ["reply",     "Reply",     ICON.reply],
+            ["reply-all", "Reply all", ICON.replyAll],
+            ["forward",   "Forward",   ICON.forward]
+        ];
+        function inject() {
+            var mc = document.getElementById("message-content");
+            if (!mc || !window.rcmail) return;
+            var host = mc.querySelector(".rightcol") || mc;
+            if (host.querySelector(".gm-msg-actions")) return; // already injected
+            var bar = document.createElement("div");
+            bar.className = "gm-msg-actions";
+            bar.setAttribute("data-gm-actions", "1");
+            BTNS.forEach(function (b) {
+                var el = document.createElement("button");
+                el.type = "button";
+                el.innerHTML = b[2] + "<span>" + b[1] + "</span>";
+                el.addEventListener("click", function (ev) {
+                    if (window.rcmail) rcmail.command(b[0], "", this, ev);
+                });
+                bar.appendChild(el);
+            });
+            host.appendChild(bar);
+        }
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", inject);
+        } else {
+            inject();
+        }
+    })();
+
     if (html.classList.contains("iframe")) return;
 
     var DEFAULTS = {

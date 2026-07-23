@@ -11,6 +11,14 @@ html {
     --wallpaper: none;
     --wallpaper-tint: rgba(255, 255, 255, 0);
     --gm-font: "Google Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* Gmail reading/list/compose tokens */
+    --gm-icon: #5f6368;        /* toolbar / star / reply glyphs */
+    --gm-ink: #202124;         /* subject + sender name */
+    --gm-meta: #5f6368;        /* email address, "to me", timestamp */
+    --gm-hairline: #f1f3f4;    /* row + section dividers */
+    --gm-pill-border: #dadce0; /* outlined action pills */
+    --gm-hover: rgba(60, 64, 67, .08); /* circular icon hover */
 }
 html.dark-mode {
     --accent: #a8c7fa;
@@ -21,6 +29,13 @@ html.dark-mode {
     --surface-muted: #232323;
     --card-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 1px 3px rgba(0, 0, 0, .4);
     --wallpaper-tint: rgba(0, 0, 0, 0);
+
+    --gm-icon: #9aa0a6;
+    --gm-ink: #e8eaed;
+    --gm-meta: #9aa0a6;
+    --gm-hairline: #2a2a2a;
+    --gm-pill-border: #5f6368;
+    --gm-hover: rgba(255, 255, 255, .10);
 }
 
 body {
@@ -243,16 +258,6 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
 .messagelist tr.selected:hover { background: var(--accent-soft); }
 .messagelist tr:not(.unread) { background: transparent; }
 
-/* --------------------------------------------------------------------------
-   The Gmail row.
-
-   Elastic emits the subject cell's children in DOM order:
-       flags → fromto → date → subject → attachment/size
-   which does NOT match Gmail's visual order. Rather than depend on that
-   source order (the cause of the overlapping columns), lay the cell out with
-   flexbox and pin each child with an explicit `order`, so the visual result
-   is always:  sender → subject/preview → attachment → date.
-   -------------------------------------------------------------------------- */
 .messagelist td.subject {
     display: flex !important;
     flex-wrap: nowrap;
@@ -339,12 +344,162 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
 /* ==========================================================================
    Reading pane / message view
    ========================================================================== */
-#layout-content .header_back {
-    background: transparent;
-    border-bottom: 1px solid var(--bordercolor);
+#layout-content {
+    background: var(--surface);
 }
-.message-part, #messagebody { font-family: var(--gm-font); }
+#layout-content .header_back,
+#layout-content .header[role="toolbar"] {
+    background: transparent;
+    border-bottom: 1px solid var(--gm-hairline);
+}
+
+/* --- Top action toolbar (back / archive / spam / delete / more / pager) --- */
+#layout-content .header[role="toolbar"] a.button,
+#layout-content .header[role="toolbar"] a.button.icon,
+#mailtoolbar > a,
+#mailtoolbar .message_iconflag,
+#mailtoolbar a.button {
+    color: var(--gm-icon);
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s;
+}
+#layout-content .header[role="toolbar"] a.button:hover,
+#mailtoolbar > a:hover,
+#mailtoolbar a.button:hover {
+    background: var(--gm-hover);
+    color: var(--gm-ink);
+}
+
+/* --- Subject row --- */
+#message-header {
+    padding: 12px 24px 0;
+}
+#message-header .subject {
+    font-family: var(--gm-font);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--gm-ink);
+    margin: 4px 0 14px;
+    word-break: break-word;
+}
+/* Roundcube label/flag chips beside the subject → Gmail label chips */
+#message-header .subject .label,
+#message-header .subject .msgflags span,
+#message-header .subject span.label {
+    display: inline-flex;
+    align-items: center;
+    font-size: .6875rem;
+    line-height: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--gm-pill-border);
+    border-radius: 4px;
+    color: var(--gm-meta);
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* --- Sender block: avatar + name/email + right-aligned date & icons --- */
+#message-header .header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--gm-hairline);
+}
+#message-header .header .contactphoto,
+#message-header .header .contactphoto img {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    overflow: hidden;
+    background: var(--surface-muted);
+}
+#message-header .header .header-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 1px;
+}
+/* Sender display name */
+#message-header .header-summary,
+#message-header .header-summary .adr,
+#message-header .header-summary .name {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--gm-ink);
+}
+/* Email address + to/date lines are muted */
+#message-header .header-summary .email,
+#message-header .header-summary .subtitle,
+#message-header .header-headers,
+#message-header .header-headers a,
+#message-header .header-headers td {
+    font-weight: 400;
+    font-size: .8125rem;
+    color: var(--gm-meta);
+}
+#message-header .header-headers { margin-top: 2px; }
+
+/* Per-message toolbar (date + flag + reply + more) pinned right */
+#message-header .header #mailtoolbar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+#message-header .header .messagedate {
+    color: var(--gm-meta);
+    font-size: .8125rem;
+    white-space: nowrap;
+    margin-right: 6px;
+}
+
+/* --- Body --- */
+#message-content {
+    padding: 16px 24px 8px;
+}
+.message-part, #messagebody, #message-content {
+    font-family: var(--gm-font);
+    color: var(--gm-ink);
+}
 #layout-content .iframe-wrapper { background: var(--surface); }
+#message-content .leftcol { margin-bottom: 8px; }
+
+/* --- Injected Gmail-style bottom action pills (gmail-ui.js) --- */
+.gm-msg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 24px 28px;
+}
+.gm-msg-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--gm-pill-border);
+    border-radius: 999px;
+    padding: 8px 20px;
+    background: transparent;
+    color: var(--gm-ink);
+    font: 600 .875rem var(--gm-font);
+    cursor: pointer;
+    transition: background .12s, box-shadow .12s;
+}
+.gm-msg-actions button:hover {
+    background: var(--surface-muted);
+    box-shadow: var(--card-shadow);
+}
+.gm-msg-actions button svg { width: 18px; height: 18px; fill: currentColor; }
 
 /* ==========================================================================
    Login screen — Gmail sign-in card

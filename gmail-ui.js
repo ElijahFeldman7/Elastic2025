@@ -412,10 +412,81 @@
         if (h) h.textContent = msg;
     }
 
+    /* Gmail-style hover quick actions (Archive / Delete / Mark read) on each
+       list row. Elastic only ships a delete glyph, so inject our own bar.
+       Two hard-won details:
+        - Roundcube selects rows on MOUSEDOWN, so we stop that in the capture
+          phase on our icons (a click-phase stop is too late and opens the msg).
+        - command('delete') is gated off unless a row is "properly" selected and
+          select() opens the message — so we set the selection directly and call
+          the action methods (delete_messages / move_messages / mark_message)
+          straight, which act without opening anything. */
+    function initRowActions() {
+        var SVG = {
+            archive: '<svg viewBox="0 0 24 24"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1z"/></svg>',
+            del:     '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>',
+            read:    '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg>'
+        };
+        var ACTIONS = [
+            { cmd: "archive", title: "Archive",      svg: SVG.archive },
+            { cmd: "delete",  title: "Delete",       svg: SVG.del },
+            { cmd: "read",    title: "Mark as read", svg: SVG.read }
+        ];
+        function addBar(tr) {
+            if (!tr || tr.querySelector(".gm-row-actions")) return;
+            var subj = tr.querySelector("td.subject");
+            if (!subj) return;
+            var bar = document.createElement("span");
+            bar.className = "gm-row-actions";
+            ACTIONS.forEach(function (a) {
+                var el = document.createElement("a");
+                el.href = "#";
+                el.title = a.title;
+                el.setAttribute("aria-label", a.title);
+                el.dataset.cmd = a.cmd;
+                el.innerHTML = a.svg;
+                bar.appendChild(el);
+            });
+            subj.appendChild(bar);
+        }
+        function addAll() {
+            var rows = document.querySelectorAll("#messagelist tbody tr.message");
+            for (var i = 0; i < rows.length; i++) addBar(rows[i]);
+        }
+        var tbody = document.querySelector("#messagelist tbody");
+        if (!tbody) return;
+        addAll();
+        new MutationObserver(addAll).observe(tbody, { childList: true });
+
+        // Block Roundcube's mousedown row-select on our icons (capture phase).
+        document.addEventListener("mousedown", function (e) {
+            if (e.target.closest && e.target.closest(".gm-row-actions a")) e.stopPropagation();
+        }, true);
+        // Run the action directly, no message open.
+        document.addEventListener("click", function (e) {
+            var a = e.target.closest && e.target.closest(".gm-row-actions a");
+            if (!a) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (!window.rcmail || !rcmail.message_list) return;
+            var tr = a.closest("tr");
+            var ml = rcmail.message_list;
+            var uid = ml.get_row_uid(tr);
+            if (uid == null) return;
+            ml.selection = [uid];
+            ml.last_selected = uid;
+            if (a.dataset.cmd === "read") rcmail.mark_message("read", uid);
+            else if (a.dataset.cmd === "delete") rcmail.delete_messages(e);
+            else if (a.dataset.cmd === "archive")
+                rcmail.move_messages(rcmail.env.archive_folder || "Archive", e);
+        }, true);
+    }
+
     function boot() {
         apply(load());
         buildTopbar();
         initFullMessage();
+        initRowActions();
     }
 
     if (document.readyState === "loading") {

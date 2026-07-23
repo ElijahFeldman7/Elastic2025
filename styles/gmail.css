@@ -325,9 +325,18 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
     height: 30px;
     border-radius: 50%;
     font-size: 13px;
-    line-height: 30px;
+    /* Flex-centre so the initial AND the selected-state checkmark sit dead
+       centre (line-height alone left the checkmark off-centre). */
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     text-align: center;
+    background-position: center !important;
 }
+/* The trailing flag/attachment glyph column reads as a stray "file" icon —
+   drop it (its actions live in the hover bar / message view). */
+.messagelist td.flags { display: none; }
 .messagelist td.subject .contactphoto,
 .messagelist td.subject .contactphoto img {
     width: 32px;
@@ -403,12 +412,56 @@ body.task-mail.gm-search-hoisted #messagelist-header .searchbar { display: none;
     font-size: .78rem;
     line-height: normal;
 }
-/* Keep the row inside the pane and give the flag star breathing room so the
-   date is never clipped or overlapped. */
+/* Keep the row inside the pane so the date is never clipped. */
 #messagelist-content { padding-right: 4px; }
 .messagelist td.subject { padding-right: 10px; }
-.messagelist td.flags { padding-left: 2px; width: 20px; }
 .messagelist tr.unread td.subject span.date { color: var(--font); font-weight: 700; }
+
+/* Gmail hover quick-actions (injected by gmail-ui.js): hidden until row hover,
+   where they replace the date on the right. */
+.messagelist td.subject .gm-row-actions {
+    display: none;
+    order: 6;
+    margin-left: 8px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 2px;
+}
+.messagelist tr:hover td.subject .gm-row-actions { display: inline-flex; }
+.messagelist tr:hover td.subject span.date { display: none; }
+.gm-row-actions a {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-icon);
+    text-decoration: none;
+}
+.gm-row-actions a:hover { background: var(--gm-hover); color: var(--gm-ink); }
+.gm-row-actions svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* Search field — Elastic leaves it a plain white box; make it a themed Gmail
+   pill (covers the in-list search and any non-hoisted instance). */
+#messagelist-header .searchbar { background: transparent; border: 0; }
+#messagelist-header .searchbar input,
+input#mailsearchform,
+.messagelist-header input.no-bs,
+.searchbar input.no-bs {
+    background: var(--surface-muted);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--font);
+    height: 40px;
+    padding: 0 16px;
+}
+#messagelist-header .searchbar input:focus,
+input#mailsearchform:focus {
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(60, 64, 67, .3);
+    outline: none;
+}
 
 /* Keep the size column (only shown when sorting by size) inline with the date. */
 .messagelist td.subject span.size {
@@ -516,7 +569,17 @@ html.gm-compact .messagelist td.subject { min-height: 30px; padding-top: 0; padd
 
 /* Body */
 #message-content { padding: 12px 24px; }
-.message-part, #messagebody { font-family: var(--gm-font); color: var(--gm-ink); }
+/* Keep the whole message body on the themed surface with themed text so a
+   plain-text message never renders as a stray white block in dark mode. */
+.message-part,
+#messagebody,
+#messagebody pre,
+div.message-htmlpart,
+div.message-part {
+    font-family: var(--gm-font);
+    color: var(--gm-ink);
+    background: var(--surface);
+}
 #layout-content .iframe-wrapper { background: var(--surface); }
 
 /* --- Injected Gmail-style bottom action pills (gmail-ui.js) --- */

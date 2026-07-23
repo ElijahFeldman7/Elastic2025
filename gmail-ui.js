@@ -453,10 +453,15 @@
             var rows = document.querySelectorAll("#messagelist tbody tr.message");
             for (var i = 0; i < rows.length; i++) addBar(rows[i]);
         }
-        var tbody = document.querySelector("#messagelist tbody");
-        if (!tbody) return;
         addAll();
-        new MutationObserver(addAll).observe(tbody, { childList: true });
+        // Roundcube rebuilds the <tbody> on load, so a childList observer on the
+        // initial one misses the rows — hook its own row events instead.
+        if (window.rcmail && rcmail.addEventListener) {
+            rcmail.addEventListener("insertrow", function (e) {
+                try { addBar(e.row.obj); } catch (x) {}
+            });
+            rcmail.addEventListener("listupdate", addAll);
+        }
 
         // Block Roundcube's mousedown row-select on our icons (capture phase).
         document.addEventListener("mousedown", function (e) {
